@@ -4,6 +4,10 @@
 % --------------------------------------------------------------------------
 \documentclass{article}
 \usepackage{spconf,amsmath,graphicx}
+\usepackage{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
 
 % Example definitions.
 % --------------------
@@ -12,12 +16,12 @@
 
 % Title.
 % ------
-\title{AUTHOR GUIDELINES FOR ICASSP 2019 PROCEEDINGS MANUSCRIPTS}
+\title{Deep Learning for Acoustic Object Counting in Shaken Containers}
 %
 % Single address.
 % ---------------
-\name{Author(s) Name(s)\thanks{Thanks to XYZ agency for funding.}}
-\address{Author Affiliation(s)}
+\name{Zhiheng Wang}
+\address{School of Physics, Nanjing University}
 %
 % For example:
 % ------------
@@ -44,68 +48,89 @@
 \maketitle
 %
 \begin{abstract}
-The abstract should appear at the top of the left-hand column of text, about
-0.5 inch (12 mm) below the title area and no more than 3.125 inches (80 mm) in
-length.  Leave a 0.5 inch (12 mm) space between the end of the abstract and the
-beginning of the main text.  The abstract should contain about 100 to 150
-words, and should be identical to the abstract text submitted electronically
-along with the paper cover sheet.  All manuscripts must be in English, printed
-in black ink.
+In this paper, we attempt to articulate an approach to identify the number of small, identical items in an opaque container, solely relying on the sound it produces when shaken. This problem was proposed in IYPT 2024, and is of great practical value. It leverages the immense power of Deep Neural Network (DNN), specifically Convolutional Neural Network (CNN) in the time domain, a modern and popular method of digital signal processing for certain tasks. Our proposed model is ultra-lightweight, and can be trained and perform inference at ease with consumer-grade CPUs. Along with the model, we also present our experimental setup which we use to acquire the training and test data. Experimental results show our approach achieves superior performance and generalization ability. 
 \end{abstract}
 %
 \begin{keywords}
-One, two, three, four, five
+Object Counting, Acoustic Signal Processing, Lightweight Model, Convolutional Neural Network
 \end{keywords}
-%
-\section{Introduction}
+
+\section{INTRODUCTION}
 \label{sec:intro}
 
-These guidelines include complete descriptions of the fonts, spacing, and
-related information for producing your proceedings manuscripts. Please follow
-them and if you have any questions, direct them to Conference Management
-Services, Inc.: Phone +1-979-846-6800 or email
-to \\\texttt{icassp2019@cmsworkshops.com}.
+This problem was among a list of 17 problems for the 37th IYPT 2024 and CUPT 2024 (China Undergraduate Physics Tournament), as they share the same set of problems; I attended the latter event two years ago. It was not the most popular problem by choice of the candidates, though, as it cannot be physically modeled in a traditional way. Looking back today, I thought it would be interesting to revisit the idea with the concept of deep learning and signal processing techniques. 
 
-\section{Formatting your paper}
-\label{sec:format}
+There have been significant breakthroughs in the fields of speech enhancement, music source separation and many other acoustic-signal-related fields, driven by the rapid development of deep learning techniques. Numerous model architectures were designed for multiple purposes, which take sound waveforms or spectrograms as their inputs; many of them were inspired by modern advances in CV. In our work, we similarly design a model with inspiration drawn from a classical CV model. 
 
-All printed material, including text, illustrations, and charts, must be kept
-within a print area of 7 inches (178 mm) wide by 9 inches (229 mm) high. Do
-not write or print anything outside the print area. The top margin must be 1
-inch (25 mm), except for the title page, and the left margin must be 0.75 inch
-(19 mm).  All {\it text} must be in a two-column format. Columns are to be 3.39
-inches (86 mm) wide, with a 0.24 inch (6 mm) space between them. Text must be
-fully justified.
+Unlike the case with speech-related tasks, where high-quality datasets in large quantities are available online, such as the DNS challenge, VCTK Corpus and so on, our data is limited. The main reason is that our training data can only be obtained by our own experiments, as few researchers are solving the exact task we are tackling in this paper. The scarcity of data calls for proper regularization methods during the training of our model to avoid excessive overfitting in the training set. 
 
-\section{PAGE TITLE SECTION}
-\label{sec:pagestyle}
+In this paper, we propose an 1-D CNN based model structure and an ordinal regression inspired loss function to identify the number of small, identical items in an opaque container, solely relying on the sound it produces when shaken. 
 
-The paper title (on the first page) should begin 1.38 inches (35 mm) from the
-top edge of the page, centered, completely capitalized, and in Times 14-point,
-boldface type.  The authors' name(s) and affiliation(s) appear below the title
-in capital and lower case letters.  Papers with multiple authors and
-affiliations may require two or more lines for this information. Please note
-that papers should not be submitted blind; include the authors' names on the
-PDF.
+\section{DATA ACQUISITION}
+\label{sec:data}
 
-\section{TYPE-STYLE AND FONTS}
-\label{sec:typestyle}
+Training and test data are acquired with the apparatus shown in Fig.\ref{fig:exp}. The stepper motor is programmed and given instructions by an ESP-32 microcomputer on the Arduino platform. This guarantees that the container is rotated in a constant speed. Balls of two distinct materials, namely wood and silicon nitride, are used alternatively to validate the generalization ability of our approach. 
 
-To achieve the best rendering both in printed proceedings and electronic proceedings, we
-strongly encourage you to use Times-Roman font.  In addition, this will give
-the proceedings a more uniform look.  Use a font that is no smaller than nine
-point type throughout the paper, including figure captions.
+\begin{figure}[htb]
 
-In nine point type font, capital letters are 2 mm high.  {\bf If you use the
-smallest point size, there should be no more than 3.2 lines/cm (8 lines/inch)
-vertically.}  This is a minimum spacing; 2.75 lines/cm (7 lines/inch) will make
-the paper much more readable.  Larger type sizes require correspondingly larger
-vertical spacing.  Please do not double-space your paper.  TrueType or
-Postscript Type 1 fonts are preferred.
+\begin{minipage}[b]{1.0\linewidth}
+  \centering
+  \centerline{\includegraphics[width=8.5cm]{figs/exp.png}}
+%  \vspace{2.0cm}
+\end{minipage}
+\caption{Experimental setup to acquire audio data. }
+\label{fig:exp}
+%
+\end{figure}
 
-The first paragraph in each section should not be indented, but all the
-following paragraphs within the section should be indented as these paragraphs
-demonstrate.
+Sound signals are collected at a distance by a directional microphone pointed to the container being shaken. The microphone has a rather flat frequency response curve (Fig.\ref{fig:freq}), operates at a sampling rate of 48 kHz, and picks up sound in a particular direction to filter out irrelevant noise.  
+
+\begin{figure}[htb]
+
+\begin{minipage}[b]{1.0\linewidth}
+  \centering
+  \centerline{\includegraphics[width=8.5cm]{figs/curve.png}}
+%  \vspace{2.0cm}
+\end{minipage}
+\caption{Frequency response curve.}
+\label{fig:freq}
+%
+\end{figure}
+
+A total of 1.54 hours of data is collected with different types and numbers (1-15) of balls in the container, comprising of a balanced dataset. 
+
+\section{MODEL ARCHITECTURE}
+\label{sec:model}
+
+\begin{figure}[htbp]
+
+\begin{minipage}[b]{1.0\linewidth}
+  \centering
+  \centerline{\includegraphics[width=6cm]{figs/architecture.tex}}
+%  \vspace{2.0cm}
+\end{minipage}
+\caption{Model architecture.}
+\label{fig:model}
+%
+\end{figure}
+
+Our model architecture consists of 1D convolutional blocks with ReLU activation, max-pooling modules and two fully-connected layers producing the output, which is supervised with ground-truth and an intricate loss function. An overview of our presented model is shown in Fig. \ref{fig:model}. Details of each module will be presented in the following sub-sections. 
+
+\subsection{1D Convolution Blocks}
+
+Scarce experimental data calls for a simple model configuration with fewer parameters. We draw our inspiration from the well-known LeNet-5, a lightweight document recognition model. It leverages the power of 2D convolution and subsampling to extract latent feature representation of the input data, an approach called representation learning. 
+
+Here we replace 2D convolution with 1D convolution, since we are dealing with 1-dimensional input. We replace sigmoid activation with ReLU activation, subsampling layers with max-pooling layers as well, for these substitutions have proven more powerful theoretically and in DNN practices in the past few years. 
+
+Convolutional layers with multiple channels can be seen as a set of filters, each capturing features in certain frequency bands. As data traverses deeper into the neural network, these filters are applied in a cascaded manner, and gradually extract abstract and high-level features while downsampling the time axis. Parameters within the filters are optimized in the training process. 
+
+\subsection{Fully Connected Layers}
+
+The output of the latent feature representation is, in turn, flattened and fed into fully connected layers. They facilitate information flow between channels and positions, and produce output logits. 
+
+Dropout layers are inserted in this module with the aim of regularization, for fully connected layers consume a large number of parameters and may consequently result in overfitting. Dropout rate of $p=0.3$ is determined empirically. 
+
+\subsection{Loss Function}
 
 \section{MAJOR HEADINGS}
 \label{sec:majhead}
